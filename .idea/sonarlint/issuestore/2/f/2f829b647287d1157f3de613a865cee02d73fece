@@ -1,0 +1,6 @@
+
+hsquid:MaximumInheritanceDepth"<This class has 7 parents which is greater than 5 authorized.(ç„Íÿÿÿÿÿ
+rsquid:S00120"WRename this package name to match the regular expression '^[a-z]+(\.[a-z][a-z0-9]*)*$'.(ˆ¤‹µüÿÿÿÿ
+_squid:CommentedOutCodeLine"<This block of commented-out lines of code should be removed.(¼å×>
+Fsquid:S1602",Remove useless curly braces around statement(ææÄªÿÿÿÿÿ
+Lsquid:S1611"2Remove the parentheses around the "view" parameter(®èóøÿÿÿÿ

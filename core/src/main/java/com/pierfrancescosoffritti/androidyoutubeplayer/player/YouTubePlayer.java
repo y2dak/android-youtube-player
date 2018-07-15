@@ -13,6 +13,15 @@ public interface YouTubePlayer {
     void loadVideo(@NonNull final String videoId, final float startSeconds);
 
     /**
+     * Loads and automatically plays the specified video.
+     * @param videoId id of the video
+     * @param startSeconds the time from which the video should start playing
+     * @param videoId2 id of the second video
+     * @param startSeconds2 the time from which the second video should start playing
+     */
+    void loadVideos(@NonNull final String videoId, final float startSeconds, @NonNull final String videoId2, final float startSeconds2, final float video1Length);
+
+    /**
      * Loads the specified video's thumbnail and prepares the player to play the video. Does not automatically play the video.
      * @param videoId id of the video
      * @param startSeconds the time from which the video should start playing

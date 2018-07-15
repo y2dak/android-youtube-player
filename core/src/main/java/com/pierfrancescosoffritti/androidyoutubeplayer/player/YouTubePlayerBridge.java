@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerListener;
@@ -60,11 +61,13 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendYouTubeIframeAPIReady() {
+        Log.d("YOUTUBEPLAYERVIEW", "sendYouTubeIframeAPIReady");
         youTubePlayer.onYouTubeIframeAPIReady();
     }
 
     @JavascriptInterface
     public void sendReady() {
+        Log.d("YOUTUBEPLAYERVIEW", "sendReady");
         mainThreadHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -76,8 +79,8 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendStateChange(final String state) {
-
         final PlayerConstants.PlayerState playerState = parsePlayerState(state);
+        Log.d("YOUTUBEPLAYERVIEW", "sendStateChange: " + playerState.name());
 
         mainThreadHandler.post(new Runnable() {
             @Override
@@ -90,7 +93,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendPlaybackQualityChange(final String quality) {
-
+        Log.d("YOUTUBEPLAYERVIEW", "sendPlaybackQualityChange");
         final PlayerConstants.PlaybackQuality playbackQuality = parsePlaybackQuality(quality);
 
         mainThreadHandler.post(new Runnable() {
@@ -104,7 +107,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendPlaybackRateChange(final String rate) {
-
+        Log.d("YOUTUBEPLAYERVIEW", "sendPlaybackRateChange");
         final PlayerConstants.PlaybackRate playbackRate = parsePlaybackRate(rate);
 
         mainThreadHandler.post(new Runnable() {
@@ -118,7 +121,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendError(final String error) {
-
+        Log.d("YOUTUBEPLAYERVIEW", "sendError");
         final PlayerConstants.PlayerError playerError = parsePlayerError(error);
 
         mainThreadHandler.post(new Runnable() {
@@ -132,6 +135,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendApiChange() {
+        Log.d("YOUTUBEPLAYERVIEW", "sendApiChange");
         mainThreadHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -143,6 +147,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendVideoCurrentTime(final String seconds) {
+        Log.d("YOUTUBEPLAYERVIEW", "sendVideoCurrentTime: " + seconds);
         final float currentTimeSeconds;
         try {
             currentTimeSeconds = Float.parseFloat(seconds);
@@ -162,6 +167,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendVideoDuration(final String seconds) {
+        Log.d("YOUTUBEPLAYERVIEW", "sendVideoDuration");
         final float videoDuration;
         try {
             String finalSeconds = TextUtils.isEmpty(seconds) ? "0" : seconds;
@@ -201,6 +207,7 @@ public class YouTubePlayerBridge {
 
     @JavascriptInterface
     public void sendVideoId(final String videoId) {
+        Log.d("YOUTUBEPLAYERVIEW", "sendVideoId");
         mainThreadHandler.post(new Runnable() {
             @Override
             public void run() {

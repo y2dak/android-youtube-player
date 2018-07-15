@@ -6,7 +6,7 @@ buildscript {
         targetSdk = 27
 
         versionCode_core = 8
-        versionName_core = '8.0.1'
+        versionName_core = '8.0.2'
 
         versionCode_chromecast = 1
         versionName_chromecast = '0.15'

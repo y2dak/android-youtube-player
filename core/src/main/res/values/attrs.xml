@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="YouTubePlayerView">
+        <attr name="aspectHeight" format="integer" />
+        <attr name="aspectWidth" format="integer" />
+    </declare-styleable>
+</resources>

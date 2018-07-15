@@ -36,9 +36,9 @@ function loadYouTubeIFrameAPIs() {
 }
 
 // called automatically by the IFrame APIs
-function onYouTubeIframeAPIReady() {
+function onYouTubeIframeAPIReady(numPlayers) {
     isYouTubeIframeAPIReady = true
-    youTubePlayer.initialize()
+    youTubePlayer.initialize(numPlayers)
 }
 
 window.main_onYouTubeIframeAPIReady = onYouTubeIframeAPIReady

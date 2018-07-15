@@ -7,8 +7,7 @@
             margin: 0;
             padding: 0;
             background-color: #000000;
-            overflow: hidden;
-            position: fixed;
+            position: absolute;
         }
     </style>
 
@@ -18,7 +17,8 @@
     </head>
 
     <body>
-        <div id="youTubePlayerDOM"></div>
+        <div id="youTubePlayerDOM" style="position:absolute; top:0; left:0;"></div>
+        <div id="youTubePlayerDOM2" style="position:absolute; bottom:0; right:0;"></div>
     </body>
 
     <script type="text/javascript">
@@ -32,6 +32,12 @@
         
         var YouTubePlayerBridge = window.YouTubePlayerBridge;
     	var player;
+    	var player2;
+        var minimized = false;
+        var mainVideoLoaded = false;
+        var videoLength;
+    	var lastState2;
+    	var offset;
 
         var timerId;
 
@@ -66,22 +72,62 @@
     			}
                 
     		});
+
+    		player2 = new YT.Player('youTubePlayerDOM2', {
+
+                height: '100%',
+    			width: '100%',
+
+                events: {
+    				onReady: function(event) { YouTubePlayerBridge.sendReady() },
+    				onStateChange: function(event) { sendPlayerStateChange2(event.data) },
+    				onPlaybackQualityChange: function(event) { YouTubePlayerBridge.sendPlaybackQualityChange(event.data) },
+    				onPlaybackRateChange: function(event) { YouTubePlayerBridge.sendPlaybackRateChange(event.data) },
+    				onError: function(error) { YouTubePlayerBridge.sendError(error.data) },
+    				onApiChange: function(event) { YouTubePlayerBridge.sendApiChange() }
+    			},
+
+    			playerVars: {
+    				autoplay: 0,
+    				autohide: 1,
+    				controls: 0,
+    				enablejsapi: 1,
+    				fs: 0,
+    				origin: 'https://www.youtube.com',
+    				rel: 0,
+    				showinfo: 0,
+    				iv_load_policy: 3
+    			}
+
+    		});
     	}
 
-    	function sendPlayerStateChange(playerState) {
+    	function sendPlayerStateChange2(playerState) {
+            // if (lastState2 == YT.PlayerState.BUFFERING && playerState == YT.PlayerState.PLAYING) {
+            //      ready2 = true
+            //      if (ready) {
+            //         player.seekTo(0)
+            //         player.playVideo()
+            //      } else {
+            //         player2.pauseVideo()
+            //         player2.seekTo(offset)
+            //      }
+            // }
+            lastState2 = playerState
             clearTimeout(timerId);
 
             switch (playerState) {
-            	case YT.PlayerState.UNSTARTED:
+                case YT.PlayerState.UNSTARTED:
                     sendStateChange(UNSTARTED);
                     return;
 
-            	case YT.PlayerState.ENDED:
+                case YT.PlayerState.ENDED:
                     sendStateChange(ENDED);
                     return;
 
                 case YT.PlayerState.PLAYING:
                     sendStateChange(PLAYING);
+                    loadMainVideo()
                     
                     startSendCurrentTimeInterval();
                     sendVideoData(player);
@@ -92,6 +138,7 @@
                     return;
 
                 case YT.PlayerState.BUFFERING:
+                    checkBuffering()
                     sendStateChange(BUFFERING);
                     return;
 
@@ -100,8 +147,12 @@
                     return;
             }
 
+            function checkBuffering() {
+
+            }
+
             function sendVideoData(player) {
-                var videoDuration = player.getDuration();
+                var videoDuration = player2.getDuration();
 
                 YouTubePlayerBridge.sendVideoDuration(videoDuration);
             }
@@ -112,24 +163,163 @@
 
             function startSendCurrentTimeInterval() {
                 timerId = setInterval(function() {
-                    YouTubePlayerBridge.sendVideoCurrentTime( player.getCurrentTime() )
-                    YouTubePlayerBridge.sendVideoLoadedFraction( player.getVideoLoadedFraction() )
-                }, 100 );
+                    var currentTime = Number(player2.getCurrentTime().toFixed(2))
+
+                    if (currentTime >= offset && currentTime < (offset + 1)) {
+                        switchToPlayer1()
+                    }
+                    YouTubePlayerBridge.sendVideoCurrentTime( currentTime )
+                    YouTubePlayerBridge.sendVideoLoadedFraction( player2.getVideoLoadedFraction() )
+                    // else if ((currentTime > offset + 1) && (currentTime < player.getDuration())) {
+                    //     if (playerPlaying) {
+                    //         var currentPlayer1Time = Number(player.getCurrentTime().toFixed(2))
+                    //         var whatItShouldBe = currentTime - offset
+                    //         if ((currentPlayer1Time > (whatItShouldBe + 0.5)) || (currentPlayer1Time < (whatItShouldBe - 0.5))) {
+                    //             player.seekTo(whatItShouldBe)
+                    //             if (!playerPlaying) {
+                    //                 player.play()
+                    //             }
+                    //         }
+                    //     } else {
+                    //         loadMainVideo()
+                    //         player.play()
+                    //     }
+                    // } 
+                    if ((currentTime < offset || currentTime > (offset + videoLength))) {
+                        switchToPlayer2()
+                    }
+                }, 1000 );
+            }
+        }
+
+        function loadMainVideo() {
+            if (!mainVideoLoaded) {
+                mainVideoLoaded = true
+                player.cueVideoById(lastVideoId)
+            }
+        }
+
+        function loadAndPlayMainVideo() {
+            loadMainVideo()
+            playPlayer1()
+        }
+
+        function switchToPlayer1() {
+            minimizePlayer2()
+            loadAndPlayMainVideo()
+        }
+
+        function switchToPlayer2() {
+            maximizePlayer2()
+            pausePlayer1()
+        }
+
+        function playPlayer1() {
+            if (lastState == YT.PlayerState.PAUSED || lastState == YT.PlayerState.CUED) {
+                player.play()
+            }
+        }
+
+        function pausePlayer1() {
+            if (lastState == YT.PlayerState.PLAYING) {
+                player.pause()
+            }
+        }
+
+        function playPlayer2() {
+            if (lastState2 == YT.PlayerState.PAUSED) {
+                player2.play()
+            }
+        }
+
+        function pausePlayer2() {
+            if (lastState2 == YT.PlayerState.PLAYING) {
+                player2.pause()
+            }
+        }
+
+        function maximizePlayer2() {
+            if (minimized) {
+                minimized = false
+                document.getElementById('youTubePlayerDOM2').style.height = '100%'
+                document.getElementById('youTubePlayerDOM2').style.width = '100%'
+            }
+        }
+
+        function minimizePlayer2() {
+            if (!minimized) {
+                minimized = true
+                document.getElementById('youTubePlayerDOM2').style.height = '34%'
+                youTubePlayerDOM2.style.width = '30%'
+            }
+        }
+
+    	function sendPlayerStateChange(playerState) {
+            // if (lastState == YT.PlayerState.BUFFERING && playerState == YT.PlayerState.PLAYING && !ready) {
+            //     ready = true
+            //      if (ready2) {
+            //          player2.seekTo(offset)
+            //          player2.playVideo()
+            //      } else {
+            //         player.pauseVideo()
+            //         player.seekTo(0)
+            //      }
+            // }
+            lastState = playerState
+            if (playerState == YT.PlayerState.ENDED) {
+                // playerPlaying = false
+                switchToPlayer2()
+            } else if (playerState == YT.PlayerState.CUED) {
+
+            } else if (playerState == YT.PlayerState.BUFFERING) {
+                // paused2 = true
+                // player2.pause()
+            } else if (playerState == YT.PlayerState.PLAYING) {
+                // if (!playerPlaying) {
+                //     playerPlaying = true
+                // }
+                playPlayer2()
+                minimizePlayer2()
             }
         }
 
         // JAVA to WEB functions
 
-        function seekTo(startSeconds) {        	
-        	player.seekTo(startSeconds, true);
+        function seekTo(startSeconds) {
+            // if (startSeconds >= offset && startSeconds < player.getDuration()) {
+            //     if (!minimized) {
+            //         minimizePlayer2()
+            //     }
+            //     player.seekTo(startSeconds - offset, true);
+            //     if (!ready) {
+            //         player.play()
+            //     }
+            // } else {
+            //     ready = false
+            //     player.pause()
+            //     if (minimized) {
+            //         maximizePlayer2()
+            //     }
+            // }
+            player2.seekTo(startSeconds, true)
+            if (startSeconds < offset) {
+                switchToPlayer2()
+                // maximizePlayer2()
+                // player.seekTo(0, true)
+                // playPlayer2()
+            } else if (startSeconds >= offset && startSeconds < (offset + videoLength)) {
+                switchToPlayer1()
+            }
         }
 
         function pauseVideo() {
-        	player.pauseVideo();
+            pausePlayer2()
+            pausePlayer1()
         }
 
         function playVideo() {
-        	player.playVideo();
+            playPlayer1()
+            playPlayer2()
         }
 
         function loadVideo(videoId, startSeconds) {
@@ -137,14 +327,27 @@
             YouTubePlayerBridge.sendVideoId(videoId);
         }
 
-        function cueVideo(videoId, startSeconds) {
-            player.cueVideoById(videoId, startSeconds);
-            YouTubePlayerBridge.sendVideoId(videoId);
+        function loadVideos(videoId, startSeconds, videoId2, startSeconds2, video1Length) {
+            videoLength = video1Length
+            lastVideoId = videoId
+            lastVideoId2 = videoId2
+
+            offset = startSeconds2
+
+            player.mute()
+            // player.cueVideoById(videoId, startSeconds)
+            player2.loadVideoById(videoId2, startSeconds)
+            YouTubePlayerBridge.sendVideoId(videoId2)
         }
 
-        function setVolume(volumePercent) {
-            player.setVolume(volumePercent);
-        }
+        // function cueVideo(videoId, startSeconds) {
+        //     player.cueVideoById(videoId, startSeconds);
+        //     YouTubePlayerBridge.sendVideoId(videoId);
+        // }
+
+        // function setVolume(volumePercent) {
+        //     player.setVolume(volumePercent);
+        // }
 
     </script>
 </html>

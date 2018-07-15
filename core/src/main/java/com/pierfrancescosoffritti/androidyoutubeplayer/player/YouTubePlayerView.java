@@ -5,16 +5,19 @@ import android.arch.lifecycle.LifecycleObserver;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.res.TypedArray;
 import android.net.ConnectivityManager;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 
+import com.pierfrancescosoffritti.androidyoutubeplayer.R;
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.AbstractYouTubePlayerListener;
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerFullScreenListener;
 import com.pierfrancescosoffritti.androidyoutubeplayer.player.listeners.YouTubePlayerInitListener;
@@ -36,6 +39,9 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
     @NonNull private final FullScreenHelper fullScreenHelper;
     @Nullable private Callable asyncInitialization;
 
+    private final int aspectHeight;
+    private final int aspectWidth;
+
     public YouTubePlayerView(Context context) {
         this(context, null);
     }
@@ -46,7 +52,17 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
 
     public YouTubePlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        TypedArray a = getContext().getTheme().obtainStyledAttributes(
+                attrs,
+                R.styleable.YouTubePlayerView,
+                0, 0);
 
+        try {
+            aspectHeight = a.getInt(R.styleable.YouTubePlayerView_aspectHeight, 9);
+            aspectWidth = a.getInt(R.styleable.YouTubePlayerView_aspectWidth, 16);
+        } finally {
+            a.recycle();
+        }
         youTubePlayer = new WebViewYouTubePlayer(context);
         addView(youTubePlayer, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -64,7 +80,7 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // if height == wrap content make the view 16:9
         if(getLayoutParams().height == ViewGroup.LayoutParams.WRAP_CONTENT) {
-            int sixteenNineHeight = View.MeasureSpec.makeMeasureSpec(View.MeasureSpec.getSize(widthMeasureSpec) * 9 / 16, View.MeasureSpec.EXACTLY);
+            int sixteenNineHeight = View.MeasureSpec.makeMeasureSpec(View.MeasureSpec.getSize(widthMeasureSpec) * aspectHeight / aspectWidth, View.MeasureSpec.EXACTLY);
             super.onMeasure(widthMeasureSpec, sixteenNineHeight);
         } else
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -76,6 +92,7 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
      * @param handleNetworkEvents if <b>true</b> a broadcast receiver will be registered.<br/>If <b>false</b> you should handle network events with your own broadcast receiver. See {@link YouTubePlayerView#onNetworkAvailable()} and {@link YouTubePlayerView#onNetworkUnavailable()}
      */
     public void initialize(@NonNull final YouTubePlayerInitListener youTubePlayerInitListener, boolean handleNetworkEvents) {
+        Log.d("YOUTUBEPLAYERVIEW", "initialize");
         if(handleNetworkEvents)
             getContext().registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 
@@ -101,6 +118,7 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
      */
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     public void release() {
+        Log.d("YOUTUBEPLAYERVIEW", "release");
         removeView(youTubePlayer);
         youTubePlayer.removeAllViews();
         youTubePlayer.destroy();
@@ -112,11 +130,13 @@ public class YouTubePlayerView extends FrameLayout implements NetworkReceiver.Ne
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     void onStop() {
+        Log.d("YOUTUBEPLAYERVIEW", "onStop");
         youTubePlayer.pause();
     }
 
     @Override
     public void onNetworkAvailable() {
+        Log.d("YOUTUBEPLAYERVIEW", "onNetworkAvailable");
         if(asyncInitialization != null)
             asyncInitialization.call();
         else

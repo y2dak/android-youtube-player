@@ -1,0 +1,5 @@
+
+Fsquid:S1602",Remove useless curly braces around statement(ÒÅÁ¼øÿÿÿÿ
+6squid:S1170"!Make this final field static too.(Çíöó
+rsquid:S00120"WRename this package name to match the regular expression '^[a-z]+(\.[a-z][a-z0-9]*)*$'.(ßÜ²úüÿÿÿÿ
+csquid:MaximumInheritanceDepth"<This class has 7 parents which is greater than 5 authorized.(•Ñ›

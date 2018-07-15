@@ -71,6 +71,16 @@ class WebViewYouTubePlayer extends WebView implements YouTubePlayer, YouTubePlay
     }
 
     @Override
+    public void loadVideos(@NonNull final String videoId, final float startSeconds, @NonNull final String videoId2, final float startSeconds2, final float video1Length) {
+        mainThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                loadUrl("javascript:loadVideos('" +videoId +"', " +startSeconds +", '" +videoId2 +"', " + startSeconds2 +", " + video1Length +")");
+            }
+        });
+    }
+
+    @Override
     public void cueVideo(@NonNull final String videoId, final float startSeconds) {
         mainThreadHandler.post(new Runnable() {
             @Override
@@ -88,6 +98,12 @@ class WebViewYouTubePlayer extends WebView implements YouTubePlayer, YouTubePlay
                 loadUrl("javascript:playVideo()");
             }
         });
+    }
+
+    @Override
+    public void loadUrl(String url) {
+        super.loadUrl(url);
+        Log.d("YOUTUBEPLAYERVIEW", url);
     }
 
     @Override
